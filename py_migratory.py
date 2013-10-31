@@ -24,7 +24,8 @@ class Migrator(threading.Thread):
 
 #dont actually do anything!
 debug = 0
-to_migrate = 'ALL'
+#to_migrate = 'ALL'
+to_migrate = 'centVM-0-0-00'
 type = 'group'
 
 hostname = socket.gethostname()
@@ -59,26 +60,41 @@ for i in virsh_lines:
 migrate_list = list()
 migrate_string = ''
 
-for i in vms:
-	if i[1] == 'running':
-		#print i[0] + " is running!"
-		migrate_string = migrate_string + i[0] + " "
-		migrate_list.append(i[0])
-		#if debug == 1:
-		#	print "DEBUG: time virsh migrate --live " + i[0] + " qemu+ssh://" + destination + "/system"
-		#else:
-			#mig_time = os.popen("time virsh migrate --live " + i[0] + " qemu+ssh://" + destination + "/system")
-			
+if to_migrate != 'ALL':
+	migrate_list = to_migrate.split()
+	print migrate_list
+else:
+	for i in vms:
+		if i[1] == 'running':
+			#print i[0] + " is running!"
+			migrate_string = migrate_string + i[0] + " "
+			migrate_list.append(i[0])
+			#if debug == 1:
+			#	print "DEBUG: time virsh migrate --live " + i[0] + " qemu+ssh://" + destination + "/system"
+			#else:
+				#mig_time = os.popen("time virsh migrate --live " + i[0] + " qemu+ssh://" + destination + "/system")
+				
 #print migrate_string
 #print migrate_list
 
+threads = list()
+migrate_list.sort()
 
-if to_migrate == 'ALL':
-	#print "Migrating ALL VMS"
-	for i in migrate_list:
-		#print "\tMigrating " + i
-		thread0 = Migrator(i, destination)
-		thread0.start()
-		thread0.join()
-		print '%s, %0.3f ms' % (i, thread0.latency*1000.0)
+#print "Migrating ALL VMS"
+for i in migrate_list:
+	#print "\tMigrating " + i
+	threads.append(Migrator(i, destination))
 
+for i in threads:
+	i.start()
+	print i.domain + ",",
+	sys.stdout.flush()
+
+print ""
+
+for i in threads:
+	i.join()
+	print '%0.3f, ' % (i.latency),
+	sys.stdout.flush()
+
+print ""
