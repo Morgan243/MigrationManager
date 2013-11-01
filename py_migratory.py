@@ -22,79 +22,98 @@ class Migrator(threading.Thread):
 		self.latency = t2 - t1;
 		return mig_out
 
-#dont actually do anything!
-debug = 0
-#to_migrate = 'ALL'
-to_migrate = 'centVM-0-0-00'
+class MigrationManager:
+	def __init__(self, method, domains, destination):
+		self.method = method
+		self.domains = domains
+		self.destination = destination
+		self.threads = list()
+
+	def build_migrators(self):
+		#print "Migrating ALL VMS"
+		for i in domains:
+			threads.append(Migrator(i, destination))
+
+	def serial_migration(self):
+		#migrate one at a time
+		for i in threads:
+			i.start()
+			print i.domain + ",",
+			sys.stdout.flush()
+			i.join()
+			print '%0.3f, ' % (i.latency),
+			sys.stdout.flush()
+
+	def parallel_migration(self:
+		#start migrations
+		for i in threads:
+			i.start()
+			print i.domain + ",",
+			sys.stdout.flush()
+
+		for i in threads:
+			i.join()
+			print '%0.3f, ' % (i.latency),
+			sys.stdout.flush()
+
+		print ""
+
+class virsh_handler:
+	def __init__(self):
+		self.running_vms = get_running_vms()
+
+	def get_vms(self):
+		all_vms = list()
+		running_vms = list()
+		offline_vms = list()
+
+		#get a list of running vms
+		virsh_out = os.popen('virsh list --all').read()
+
+		#separate into lines and remove unecessary data
+		virsh_lines = virsh_out.split('\n')
+
+		virsh_lines.remove(' Id    Name                           State')
+		virsh_lines.remove('----------------------------------------------------')
+		virsh_lines.remove('')
+		virsh_lines.remove('')
+
+		#split on whitespace and ignore the domain id number
+		for i in virsh_lines:
+			all_vms.append(i.split()[1:])
+			if all_vms[-1][1] == 'running':
+				running_vms.append(all_vms[-1][0])
+
+
+
+
+#list of vms that will migrate
+to_migrate = 'centVM-0-0-00 centVM-0-0-01 centVM-0-0-02 centVM-0-0-03 centVM-0-0-04 centVM-0-1-00 centVM-0-1-01 centVM-0-1-02 centVM-0-1-03 centVM-0-1-04'
+
+#to_migrate = 'centVM-0-1-03 centVM-0-1-04'
 type = 'group'
 
 hostname = socket.gethostname()
 print  "Running on " + hostname
 destination ='unknown'
 
+#automatically migrate to the other host
 if hostname == 'cpu-0-0.local':
 	destination = 'cpu-0-1'
 elif hostname == 'cpu-0-1.local':
 	destination = 'cpu-0-0'
 
-print "Will migrate to " + destination
-
-virsh_out = os.popen('virsh list').read()
-
-virsh_lines = virsh_out.split('\n')
-
-virsh_lines.remove(' Id    Name                           State')
-virsh_lines.remove('----------------------------------------------------')
-virsh_lines.remove('')
-virsh_lines.remove('')
-
-#print virsh_lines
-
-vms=list()
-
-for i in virsh_lines:
-	#print i
-	#split on whitespace and ignore the domain id
-	vms.append(i.split()[1:])
-
 migrate_list = list()
-migrate_string = ''
 
-if to_migrate != 'ALL':
-	migrate_list = to_migrate.split()
-	print migrate_list
-else:
+#keyword ALL: move all running VMs on the host to the destination
+if to_migrate == 'ALL':
 	for i in vms:
 		if i[1] == 'running':
-			#print i[0] + " is running!"
-			migrate_string = migrate_string + i[0] + " "
 			migrate_list.append(i[0])
-			#if debug == 1:
-			#	print "DEBUG: time virsh migrate --live " + i[0] + " qemu+ssh://" + destination + "/system"
-			#else:
-				#mig_time = os.popen("time virsh migrate --live " + i[0] + " qemu+ssh://" + destination + "/system")
+else:
+	migrate_list = to_migrate.split()
 				
-#print migrate_string
-#print migrate_list
-
 threads = list()
 migrate_list.sort()
 
-#print "Migrating ALL VMS"
-for i in migrate_list:
-	#print "\tMigrating " + i
-	threads.append(Migrator(i, destination))
 
-for i in threads:
-	i.start()
-	print i.domain + ",",
-	sys.stdout.flush()
-
-print ""
-
-for i in threads:
-	i.join()
-	print '%0.3f, ' % (i.latency),
-	sys.stdout.flush()
-
-print ""
