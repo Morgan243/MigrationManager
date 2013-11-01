@@ -80,9 +80,12 @@ class virsh_handler:
 
 		#split on whitespace and ignore the domain id number
 		for i in virsh_lines:
-			all_vms.append(i.split()[1:])
+			all_vms.append(i.split()[1:][0])
+
 			if all_vms[-1][1] == 'running':
 				running_vms.append(all_vms[-1][0])
+			elif all_vms[-1][1] == 'shut off':
+				offline_vms.append(all_vms[-1][0])
 
 
 
@@ -104,16 +107,14 @@ elif hostname == 'cpu-0-1.local':
 	destination = 'cpu-0-0'
 
 migrate_list = list()
-
-#keyword ALL: move all running VMs on the host to the destination
-if to_migrate == 'ALL':
-	for i in vms:
-		if i[1] == 'running':
-			migrate_list.append(i[0])
-else:
-	migrate_list = to_migrate.split()
-				
-threads = list()
 migrate_list.sort()
 
+handler = virsh_handler()
 
+#keyword ALL: move all running VMs on the host to the destination
+#if to_migrate == 'ALL':
+#	for i in vms:
+#		if i[1] == 'running':
+#			migrate_list.append(i[0])
+#else:
+#	migrate_list = to_migrate.split()
