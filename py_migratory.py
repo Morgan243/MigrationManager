@@ -23,35 +23,40 @@ class Migrator(threading.Thread):
 		return mig_out
 
 class MigrationManager:
-	def __init__(self, method, domains, destination):
-		self.method = method
+	def __init__(self, domains, destination):
+		self.migrators_built = False
 		self.domains = domains
 		self.destination = destination
 		self.threads = list()
+		self.build_migrators()
 
 	def build_migrators(self):
 		#print "Migrating ALL VMS"
-		for i in domains:
-			threads.append(Migrator(i, destination))
+		for i in self.domains:
+			self.threads.append(Migrator(i, destination))
+		self.migrators_built = True 
 
 	def serial_migration(self):
 		#migrate one at a time
-		for i in threads:
-			i.start()
+		for i in self.threads:
 			print i.domain + ",",
-			sys.stdout.flush()
+		print ""
+
+		for i in self.threads:
+			i.start()
 			i.join()
 			print '%0.3f, ' % (i.latency),
 			sys.stdout.flush()
+		print ""
 
-	def parallel_migration(self:
+	def parallel_migration(self):
 		#start migrations
-		for i in threads:
+		for i in self.threads:
 			i.start()
 			print i.domain + ",",
 			sys.stdout.flush()
 
-		for i in threads:
+		for i in self.threads:
 			i.join()
 			print '%0.3f, ' % (i.latency),
 			sys.stdout.flush()
@@ -59,8 +64,10 @@ class MigrationManager:
 		print ""
 
 class virsh_handler:
-	def __init__(self):
-		self.running_vms = get_running_vms()
+	def __init__(self, destination):
+		self.all_vms, self.running_vms, self.offline_vms = self.get_vms()
+		self.destination = destination
+		
 
 	def get_vms(self):
 		all_vms = list()
@@ -77,17 +84,35 @@ class virsh_handler:
 		virsh_lines.remove('----------------------------------------------------')
 		virsh_lines.remove('')
 		virsh_lines.remove('')
+		
+		temp_list = list()
 
 		#split on whitespace and ignore the domain id number
 		for i in virsh_lines:
-			all_vms.append(i.split()[1:][0])
+			temp_list.append(i.split()[1:])
+			all_vms.append(temp_list[-1][0])
 
-			if all_vms[-1][1] == 'running':
-				running_vms.append(all_vms[-1][0])
-			elif all_vms[-1][1] == 'shut off':
-				offline_vms.append(all_vms[-1][0])
+			if temp_list[-1][1] == 'running':
+				running_vms.append(temp_list[-1][0])
+			elif temp_list[-1][1] == 'shut':
+				offline_vms.append(temp_list[-1][0])
 
+		all_vms.sort()
+		running_vms.sort()
+		offline_vms.sort()
 
+		return (all_vms, running_vms, offline_vms)
+
+	def set_all_vms_speed(self, Mbps):
+		for i in self.all_vms:
+			self.set_migrate_speed(Mbps, i)
+
+	def set_running_vms_speed(self, Mbps):
+		for i in self.running_vms:
+			self.set_migrate_speed(Mbps, i)
+
+	def set_migrate_speed(self,Mbps,domain):
+		virsh_out = os.popen("virsh migrate-setspeed "+domain+" "+str(Mbps)).read()
 
 
 #list of vms that will migrate
@@ -97,7 +122,7 @@ to_migrate = 'centVM-0-0-00 centVM-0-0-01 centVM-0-0-02 centVM-0-0-03 centVM-0-0
 type = 'group'
 
 hostname = socket.gethostname()
-print  "Running on " + hostname
+#print  "Running on " + hostname
 destination ='unknown'
 
 #automatically migrate to the other host
@@ -109,12 +134,13 @@ elif hostname == 'cpu-0-1.local':
 migrate_list = list()
 migrate_list.sort()
 
-handler = virsh_handler()
+handler = virsh_handler(destination)
+#print "ALL: " + str(handler.all_vms)
+#print "RUNNING: " + str(handler.running_vms)
+#print "OFFLINE: " + str(handler.offline_vms)
 
-#keyword ALL: move all running VMs on the host to the destination
-#if to_migrate == 'ALL':
-#	for i in vms:
-#		if i[1] == 'running':
-#			migrate_list.append(i[0])
-#else:
-#	migrate_list = to_migrate.split()
+handler.set_running_vms_speed(64)
+
+migrationManager = MigrationManager(handler.running_vms, destination)
+migrationManager.serial_migration()
+
