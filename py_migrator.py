@@ -5,15 +5,37 @@ import libvirt
 import sys
 import threading
 import time
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-m","--method",dest="migration_method", 
+			help="How to migrate: serial or parallel (default = serial)")
+
+parser.add_option("-b","--bandwidth",dest="migration_bandwidth", 
+			help="Bandwidth to allocate to each migration (Mbps) (default = 32)")
+
+parser.add_option("-s","--storage",dest="migrate_storage", default=False, action="store_true",
+			help="Perform storage migration. Be sure storage is allocated on destination")
+
+parser.add_option("-d","--destination",dest="destination",
+			help="What host to migrate the machines to")
+
+(options, args) = parser.parse_args()
+
+
 class Migrator(threading.Thread):
-	def __init__(self, domain, destination):
+	def __init__(self, domain, destination, migrate_storage=False):
 		threading.Thread.__init__(self)
 		self.domain = domain
 		self.destination = destination
+		self.migrate_storage = migrate_storage
 		self.latency = 0
 
 	def run(self):
-		self.migrate_vm(self.domain, self.destination)
+		if self.migrate_storage:
+			self.migrate_vm_storage(self.domain, self.destination)
+		else:
+			self.migrate_vm(self.domain, self.destination)
 
 	def migrate_vm(self, domain, destination):
 		t1 = time.time()
@@ -22,18 +44,30 @@ class Migrator(threading.Thread):
 		self.latency = t2 - t1;
 		return mig_out
 
+	def migrate_vm_storage(self, domain, destination):
+		t1 = time.time()
+		mig_out=os.popen("virsh migrate --copy-storage-all --live " + domain + " qemu+ssh://" +destination+"/system").read();
+		t2 = time.time()
+		self.latency = t2 - t1;
+		return mig_out
+
 class MigrationManager:
-	def __init__(self, domains, destination):
+	def __init__(self, domains, destination, storage_migration=False):
 		self.migrators_built = False
 		self.domains = domains
 		self.destination = destination
+		self.storage_migration = storage_migration
 		self.threads = list()
 		self.build_migrators()
+		
+		if self.storage_migration:
+			print "Storage migration selected!"
+
 
 	def build_migrators(self):
 		#print "Migrating ALL VMS"
 		for i in self.domains:
-			self.threads.append(Migrator(i, destination))
+			self.threads.append(Migrator(i, self.destination, self.storage_migration))
 		self.migrators_built = True 
 
 	def serial_migration(self):
@@ -55,6 +89,7 @@ class MigrationManager:
 			i.start()
 			print i.domain + ",",
 			sys.stdout.flush()
+		print ""
 
 		for i in self.threads:
 			i.join()
@@ -64,8 +99,12 @@ class MigrationManager:
 		print ""
 
 class virsh_handler:
-	def __init__(self, destination):
-		self.all_vms, self.running_vms, self.offline_vms = self.get_vms()
+	def __init__(self, destination, domains=None):
+		if domains == None:
+			self.all_vms, self.running_vms, self.offline_vms = self.get_vms()
+		else:
+			print "Custom VM list supplied: " + domains
+			self.running_vms = domains
 		self.destination = destination
 		
 
@@ -126,7 +165,9 @@ hostname = socket.gethostname()
 destination ='unknown'
 
 #automatically migrate to the other host
-if hostname == 'cpu-0-0.local':
+if options.destination != None:
+	destination = options.destination
+elif hostname == 'cpu-0-0.local':
 	destination = 'cpu-0-1'
 elif hostname == 'cpu-0-1.local':
 	destination = 'cpu-0-0'
@@ -139,8 +180,17 @@ handler = virsh_handler(destination)
 #print "RUNNING: " + str(handler.running_vms)
 #print "OFFLINE: " + str(handler.offline_vms)
 
-handler.set_running_vms_speed(64)
+if options.migration_bandwidth == None:
+	handler.set_running_vms_speed(32)
+else:
+	handler.set_running_vms_speed(options.migration_bandwidth)
 
-migrationManager = MigrationManager(handler.running_vms, destination)
-migrationManager.serial_migration()
+migrationManager = MigrationManager(handler.running_vms, destination, options.migrate_storage)
+
+if options.migration_method == 'serial':
+	migrationManager.serial_migration()
+elif options.migration_method == 'parallel':
+	migrationManager.parallel_migration()
+elif options.migration_method == None:
+	migrationManager.serial_migration()
 
