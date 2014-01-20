@@ -14,7 +14,7 @@ class virsh_handler:
         if domains == None:
             self.all_vms, self.running_vms, self.offline_vms = self.get_vms()
         else:
-            print "Custom VM list supplied: " + domains
+            print "Custom VM list supplied: " + str(domains)
             self.running_vms = domains
         self.destination = destination
 

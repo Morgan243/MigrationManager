@@ -23,7 +23,7 @@ class MigrationManager:
     def build_migrators(self):
         #print "Migrating ALL VMS"
         for i in self.domains:
-            self.threads.append(Migrator(i, self.destination, self.storage_migration, self.max_latency))
+            self.threads.append(MigratorThread.Migrator(i, self.destination, self.storage_migration, self.max_latency))
         self.migrators_built = True
 
     def serial_migration(self):

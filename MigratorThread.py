@@ -19,7 +19,16 @@ class Migrator(threading.Thread):
 #            self.migrate_vm_storage(self.domain, self.destination)
 #        else:
 #            self.migrate_vm(self.domain, self.destination)
-        self.build_migrate_cmd(self.domain, self.destination)
+
+        self.time_run_cmd(self.build_migrate_cmd(self.domain, self.destination))
+	
+
+    def time_run_cmd(self, cmd):
+	t1 = time.time()
+	out = os.popen(cmd).read()
+	t2 = time.time()
+	self.latency = t2 - t1
+	return out
 
     def build_migrate_cmd(self, domain , destination ):
         options =''
@@ -30,8 +39,8 @@ class Migrator(threading.Thread):
             options += '--copy-storage-all '
 
         options += '--live '
-        cmd = "virsh migrate --live " + options + domain + " qemu+ssh://" + destination +"/system"
-        print "COMMAND: " + cmd
+        cmd = "virsh migrate " + options + domain + " qemu+ssh://" + destination +"/system"
+	return cmd
 
     def migrate_vm(self, domain, destination):
         t1 = time.time()

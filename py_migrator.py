@@ -14,7 +14,7 @@ parser = OptionParser()
 parser.add_option("-m","--method",dest="migration_method",
             help="How to migrate: serial or parallel (default = serial)")
 
-parser.add_option("-b","--bandwidth",dest="migration_bandwidth",
+parser.add_option("-b","--bandwidth",dest="migration_bandwidth",default=32,
             help="Bandwidth to allocate to each migration (Mbps) (default = 32)")
 
 parser.add_option("-l","--max-latency",dest="max_latency",
@@ -74,12 +74,9 @@ managers = list()
 for group in groups:
     handlers.append( VirshHandler.virsh_handler(destination, group, options.max_latency) )
 
-    if options.migration_bandwidth == None:
-        handlers[-1].set_running_vms_speed(32)
-    else:
-        handlers[-1].set_running_vms_speed(options.migration_bandwidth)
+    handlers[-1].set_running_vms_speed(options.migration_bandwidth)
 
-    managers.append(Manager.MigrationManager(handlers[-1].running_vms, destination, options.migrate_storage))
+    managers.append(Manager.MigrationManager(handlers[-1].running_vms, destination, options.migrate_storage, options.max_latency))
 
 for manager in managers:
     if options.migration_method == 'serial':
