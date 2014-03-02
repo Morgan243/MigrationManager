@@ -25,6 +25,8 @@ class libvirt_Handler:
             host_connections[host] = libvirt.open("qemu+ssh://" + host + "/system")
             print "Success!"
 
+        return host_connections
+
     def getAllHostsDomains(self, host_connections = None):
         host_domains = dict()
         if host_connections == None:
