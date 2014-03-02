@@ -6,6 +6,9 @@ import threading
 import time
 import MigratorThread
 import VirshHandler
+from collections import namedtuple
+
+OptionDesc = namedtuple('OptionDesc', 'config_tuple store_in parse')
 
 class MigrationSettings:
     def __init__(self, config_map = None):
@@ -31,7 +34,6 @@ class MigrationSettings:
             self.loadOptions(self.config_map)
         else:
             print "not config map provided!!!"
-
 
     def loadOptions(self, config_map):
         print "Loading options"

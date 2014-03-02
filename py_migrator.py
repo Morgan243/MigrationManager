@@ -12,43 +12,6 @@ import ConfigParser
 from optparse import OptionParser
 
 
-
-def parse_groups():
-    if options.domain_groups is None:
-        return None
-    else:
-        # seaprate out the groups
-        tmp_groups = options.domain_groups.split(';')
-
-        groups = list()
-
-        # separate out nodes in the group
-        for group in tmp_groups:
-            groups.append(group.split(','))
-
-        #remove extra whitespace from nodes
-        for group in groups:
-            for node in group:
-                node.strip()
-            group.sort()
-
-        return groups
-
-
-def loadConfig(config_path):
-    config_map = dict()
-    config = ConfigParser.ConfigParser()
-    config.read(config_path)
-
-    for section in config.sections():
-        for option in config.options(section):
-            try:
-                config_map[(section, option)] = config.get(section, option)
-                print option + " :: " + config_map[(section, option)]
-            except:
-                print "Exception loading " + option + " in section " + section
-    return config_map 
-
 def oldLaunch(options):
     print "Falling back to old options..."
     groups = parse_groups()
@@ -80,6 +43,54 @@ def oldLaunch(options):
         elif options.migration_method == None:
             manager.serial_migration()
 
+
+
+def parse_groups(groups_str):
+    # separate out the groups
+    tmp_groups = groups_str
+
+    groups = list()
+
+    # separate out nodes in the group
+    for group in tmp_groups:
+        groups.append(group.split(','))
+
+    #remove extra whitespace from nodes
+    for group in groups:
+        for node in group:
+            node.strip()
+        group.sort()
+
+    return groups
+
+
+def loadConfig(config_path):
+    config_map = dict()
+    config = ConfigParser.ConfigParser()
+    config.read(config_path)
+
+    for section in config.sections():
+        for option in config.options(section):
+            try:
+                config_map[(section, option)] = config.get(section, option)
+                print option + " :: " + config_map[(section, option)]
+            except:
+                print "Exception loading " + option + " in section " + section
+    return config_map 
+
+def loadOptions(options, config_map):
+    if config_map == None:
+        print "Config map is NONE in loadOptions!"
+        config_map = dict()
+
+    if options.destination != None:
+        config_map[ ("main", "destination") ] = options.destination
+
+    if options.domain_groups != None:
+        config_map[ ("main", "vms") ] = parse_groups(options.domaine_groups)
+
+
+
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-m","--method",dest="migration_method",
@@ -103,8 +114,13 @@ if __name__ == "__main__":
     parser.add_option("-d","--destination",dest="destination",
                 help="What host to migrate the machines to")
 
+    parser.add_option("-p","--physical-hosts", dest="pm_hosts", default = None,
+                help="CSV of hosts that are running a hypervisor that are running any of the VMs included in other options. " +
+                "If this option isn't used, then only the host this is run on will be included in checks. The PM used in destination " + 
+                "will automatically be included, but can also be included here if you wish")
+
     parser.add_option("-c","--config-path",dest="config_path",
-                help="Path to an ini-like config file")
+                help="Path to an ini-like config file, options set here will be overwritten with synonomous CLI options")
 
     (options, args) = parser.parse_args()
 
@@ -114,8 +130,10 @@ if __name__ == "__main__":
     else:
         oldLaunch(options)
 
+
+
     settings = Manager.MigrationSettings(config_map)
 
     print str(settings)
-    manager = Manager.libvirt_MigrationManager(settings)
-    manager.doMigration()
+    #manager = Manager.libvirt_MigrationManager(settings)
+    #manager.doMigration()
