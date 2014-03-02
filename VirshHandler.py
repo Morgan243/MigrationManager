@@ -6,12 +6,13 @@ import threading
 import time
 import MigratorThread
 
-class libvirt_handler:
+class libvirt_Handler:
     def __init__(self, hosts = None):
         self.hosts = hosts
 
         if self.hosts != None:
             self.host_connections = self.connectToHosts(self.hosts)
+            self.host_domains = self.getAllHostsDomains()
         else:
             print "No hostnames passed to libvirt handler!!"
 
@@ -23,6 +24,32 @@ class libvirt_handler:
             print "connecting to " + str(host) + "...",
             host_connections[host] = libvirt.open("qemu+ssh://" + host + "/system")
             print "Success!"
+
+    def getAllHostsDomains(self, host_connections = None):
+        host_domains = dict()
+        if host_connections == None:
+            for host, conn in self.host_connections:
+                host_domains[host] = list()
+                for domain in conn.listDefinedDomains():
+                    host_domains[host].append( conn.lookupByName(domain) )
+            
+        return host_domains
+
+    def getVMs(self, hosts = None):
+        vms = list()
+
+        # if NONE, assume want all
+        if hosts == None:
+            for hostname, domains in self.host_domains:
+                vms += domains
+        elif hosts is list:
+            for host in hosts:
+                vms += self.host_domains[host]
+        else:
+            vms = self.host_connections[hosts]
+        
+        return vms
+
 
 # Interfaces with Virsh to parse available VMs and apply settings to domains
 class virsh_handler:

@@ -118,5 +118,6 @@ if __name__ == "__main__":
 
     settings = Manager.MigrationSettings(config_map)
 
-    print str(settings)
+    #print str(settings)
+    manager = Manager.libvirt_MigrationManager(settings)
 

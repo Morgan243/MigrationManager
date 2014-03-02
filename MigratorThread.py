@@ -1,9 +1,41 @@
 import os
 import socket
-#import libvirt
+import libvirt
 import sys
 import threading
 import time
+
+class libvirt_Migrator(threading.Thread):
+    def __init__(self, domain_conn, source, destination, migrate_storage=False, bandwidth = 32, max_latency = None):
+        threading.Thread.__init__(self)
+
+        self.domain = domain_conn
+        self.source = source
+        self.destination = destination
+        self.migrate_storage = migrate_storage
+        self.bandwidth = bandwidth
+        self.max_latency = max_latency
+
+        self.flags = self.build_migrate_flags()
+
+        self.latency = 0
+
+    def run(self):
+	t1 = time.time()
+	self.domain = self.domain.migrate(self.destination, self.flags, None, None, self.bandwidth)
+	t2 = time.time()
+	self.latency = t2 - t1
+
+    def build_migrate_flags(self):
+        flags = libvirt.VIR_MIGRATE_LIVE
+
+        if self.migrate_storage:
+            flags = flags | libvirt.VIR_MIGRATE_NON_SHARED_DISK 
+
+	return flags
+
+
+
 
 class Migrator(threading.Thread):
     def __init__(self, domain, destination, migrate_storage=False, max_latency = None):
