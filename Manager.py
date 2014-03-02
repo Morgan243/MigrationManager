@@ -96,6 +96,9 @@ class libvirt_MigrationManager:
 
         self.buildMigrators()
 
+        self.header_csv = ""
+        self.result_latency_csv = ""
+
     # make a thread for each thread that needs migrating
     def buildMigrators(self):
         # go through hsot pairs
@@ -124,18 +127,24 @@ class libvirt_MigrationManager:
         elif self.settings.grouping == "parallel":
             self.parallel_migration()
 
+        if self.settings.bench_result_file != None:
+            with open(self.settings.bench_result_file, 'a') as f:
+                f.write(self.header_csv + "\n")
+                f.write(self.result_latency_csv + "\n")
 
 
     def serialMigration(self):
         #migrate one at a time
         for i in self.threads:
             print i.domain.name() + ",",
+            self.header_csv += i.domain.name() + ",",
         print ""
 
         for i in self.threads:
             i.start()
             i.join()
             print '%0.3f, ' % (i.latency),
+            self.result_latency_csv += '%0.3f, ' % (i.latency)
             sys.stdout.flush()
         print ""
 
@@ -144,12 +153,14 @@ class libvirt_MigrationManager:
         for i in self.threads:
             i.start()
             print i.domain.name() + ",",
+            self.header_csv += i.domain.name() + ",",
             sys.stdout.flush()
         print ""
 
         for i in self.threads:
             i.join()
             print '%0.3f, ' % (i.latency),
+            self.result_latency_csv += '%0.3f, ' % (i.latency)
             sys.stdout.flush()
 
         print ""
