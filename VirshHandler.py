@@ -30,10 +30,10 @@ class libvirt_Handler:
     def getAllHostsDomains(self, host_connections = None):
         host_domains = dict()
         if host_connections == None:
-            for host, conn in self.host_connections:
+            for host, conn in self.host_connections.items():
                 host_domains[host] = list()
-                for domain in conn.listDefinedDomains():
-                    host_domains[host].append( conn.lookupByName(domain) )
+                for ID in conn.listDomainsID():
+                    host_domains[host].append( conn.lookupByID(ID) )
             
         return host_domains
 
@@ -42,13 +42,13 @@ class libvirt_Handler:
 
         # if NONE, assume want all
         if hosts == None:
-            for hostname, domains in self.host_domains:
+            for hostname, domains in self.host_domains.items():
                 vms += domains
         elif hosts is list:
             for host in hosts:
                 vms += self.host_domains[host]
         else:
-            vms = self.host_connections[hosts]
+            vms = self.host_domains[hosts]
         
         return vms
 

@@ -47,9 +47,7 @@ def loadConfig(config_path):
                 print option + " :: " + config_map[(section, option)]
             except:
                 print "Exception loading " + option + " in section " + section
-
-    return config_map
-
+    return config_map 
 
 def oldLaunch(options):
     print "Falling back to old options..."
@@ -118,6 +116,6 @@ if __name__ == "__main__":
 
     settings = Manager.MigrationSettings(config_map)
 
-    #print str(settings)
+    print str(settings)
     manager = Manager.libvirt_MigrationManager(settings)
-
+    manager.doMigration()
