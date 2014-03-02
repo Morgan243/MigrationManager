@@ -139,6 +139,7 @@ class libvirt_MigrationManager:
             print i.domain.name() + ",",
             self.header_csv += i.domain.name() + ","
         print ""
+        sys.stdout.flush()
 
         for i in self.threads:
             i.start()
@@ -154,8 +155,8 @@ class libvirt_MigrationManager:
             i.start()
             print i.domain.name() + ",",
             self.header_csv += i.domain.name() + ","
-            sys.stdout.flush()
         print ""
+        sys.stdout.flush()
 
         for i in self.threads:
             i.join()
