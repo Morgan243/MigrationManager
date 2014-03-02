@@ -5,14 +5,15 @@ import sys
 import threading
 import time
 import MigratorThread
+import VirshHandler
 
 class MigrationSettings:
     def __init__(self, config_map = None):
         self.print_br = "\n"
         self.config_map = config_map
 
-        self.p_host_pairs = None
-        self.unique_hosts = None
+        self.p_host_pairs = list()
+        self.unique_hosts = list()
         self.bandwidth = None
         self.max_latency = None
         self.grouping = "serial"
@@ -85,9 +86,9 @@ class MigrationSettings:
             self.unique_hosts.append(group_hosts[1].strip())
 
 class libvirt_MigrationManager:
-    def __inti__(self, settings):
+    def __init__(self, settings):
         self.settings = settings
-        self.libvirt_handle = VirshHandler.libvirt_Handler( settins.unique_hosts )
+        self.libvirt_handle = VirshHandler.libvirt_Handler( settings.unique_hosts )
         
         self.all_domains = self.libvirt_handle.getVMs()
         self.threads = list()
