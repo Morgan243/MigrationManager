@@ -50,7 +50,7 @@ class libvirt_Handler:
         else:
             vms = self.host_domains[hosts]
         
-        return vms
+        return sorted(vms, key = lambda x: x.name())
 
 
 # Interfaces with Virsh to parse available VMs and apply settings to domains
