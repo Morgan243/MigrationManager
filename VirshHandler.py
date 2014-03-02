@@ -1,10 +1,28 @@
 import os
 import socket
-#import libvirt
+import libvirt
 import sys
 import threading
 import time
 import MigratorThread
+
+class libvirt_handler:
+    def __init__(self, hosts = None):
+        self.hosts = hosts
+
+        if self.hosts != None:
+            self.host_connections = self.connectToHosts(self.hosts)
+        else:
+            print "No hostnames passed to libvirt handler!!"
+
+    # make connection to the hypervisors
+    def connectToHosts(self, hosts):
+        host_connections = dict()
+
+        for host in hosts:
+            print "connecting to " + str(host) + "...",
+            host_connections[host] = libvirt.open("qemu+ssh://" + host + "/system")
+            print "Success!"
 
 # Interfaces with Virsh to parse available VMs and apply settings to domains
 class virsh_handler:
