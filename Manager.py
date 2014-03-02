@@ -17,6 +17,10 @@ class MigrationSettings:
 
         self.p_host_pairs = list()
         self.unique_hosts = list()
+
+        self.vm_groups = None
+        self.destination = None
+
         self.bandwidth = None
         self.max_latency = None
         self.grouping = "serial"
@@ -26,26 +30,37 @@ class MigrationSettings:
         self.bench_iterations = 0
         self.bench_result_file = None
 
-        #OLD REQUIREMENTS
-        self.domains = None
-        self.destination = None
-
         if self.config_map != None:
             self.loadOptions(self.config_map)
         else:
             print "not config map provided!!!"
 
+    def __str__(self):
+        return ("hosts :: " + str(self.p_host_pairs) + self.print_br + 
+              "vm groups :: " + str(self.vm_groups) + self.print_br + 
+              "grouping :: " + self.grouping + self.print_br + 
+              "storage migration :: " + str(self.move_storage) + self.print_br +
+              "badnwidth :: " + str(self.bandwidth))
+
+
     def loadOptions(self, config_map):
         print "Loading options"
         for option, value in config_map.items():
+
             if option == ("main", "hosts"):
                 self.parseHosts(value)
+
+            elif option == ("main", "destination"):
+                self.destination = value.strip()
+
+            elif option == ("main", "vms"):
+                self.vm_groups = self.parseGroups(value)
 
             elif option == ("options", "bandwidth"):
                 self.bandwidth = int(value)
 
             elif option == ("options", "grouping"):
-                self.grouping = value
+                self.grouping = value.strip()
 
             elif option == ("options", "storage"):
                 self.move_storage = self.checkTorF(value)
@@ -57,19 +72,33 @@ class MigrationSettings:
                 self.enable_benchmarking = self.checkTorF(value)
 
             elif option == ("benchmarking", "benchmark"):
-                self.bench_name = value
+                self.bench_name = value.strip()
 
             elif option == ("benchmarking", "iterations"):
                 self.bench_iterations = int(value)
 
             elif option == ("benchmarking", "output"):
-                self.bench_result_file = value
+                self.bench_result_file = value.strip()
 
-    def __str__(self):
-        return ("hosts :: " + str(self.p_host_pairs) + self.print_br + 
-              "grouping :: " + self.grouping + self.print_br + 
-              "storage migration :: " + str(self.move_storage) + self.print_br +
-              "badnwidth :: " + str(self.bandwidth))
+
+    def parseGroups(self, vm_groups):
+        # separate out the groups
+        tmp_groups = vm_groups.split(':')
+
+        groups = list()
+
+        # separate out nodes in the group
+        for group in tmp_groups:
+            groups.append(group.strip().split(','))
+
+        #remove extra whitespace from nodes
+        for group in groups:
+            for node in group:
+                node.strip()
+            group.sort()
+
+        return groups
+
 
     def checkTorF(self, string):
         if string.lower() == "true":

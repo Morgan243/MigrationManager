@@ -12,39 +12,6 @@ import ConfigParser
 from optparse import OptionParser
 
 
-def oldLaunch(options):
-    print "Falling back to old options..."
-    groups = parse_groups()
-
-    print "Groups: " + str(groups)
-
-    if options.destination != None:
-        destination = options.destination
-    else:
-        print "Destination must be set!"
-        sys.exit(0)
-
-    handlers = list()
-    managers = list()
-
-    # setup a handler and manager for each group
-    for group in groups:
-        handlers.append( VirshHandler.virsh_handler(destination, group, options.max_latency) )
-
-        handlers[-1].set_running_vms_speed(options.migration_bandwidth)
-
-        managers.append(Manager.MigrationManager(handlers[-1].running_vms, destination, options.migrate_storage, options.max_latency))
-
-    for manager in managers:
-        if options.migration_method == 'serial':
-            manager.serial_migration()
-        elif options.migration_method == 'parallel':
-            manager.parallel_migration()
-        elif options.migration_method == None:
-            manager.serial_migration()
-
-
-
 def parse_groups(groups_str):
     # separate out the groups
     tmp_groups = groups_str
@@ -87,8 +54,12 @@ def loadOptions(options, config_map):
         config_map[ ("main", "destination") ] = options.destination
 
     if options.domain_groups != None:
-        config_map[ ("main", "vms") ] = parse_groups(options.domaine_groups)
+        config_map[ ("main", "vms") ] = options.domain_groups
 
+    if options.migration_method != None:
+        config_map[ ("options", "grouping") ] = options.migration_method
+
+    print str(config_map)
 
 
 if __name__ == "__main__":
@@ -109,7 +80,7 @@ if __name__ == "__main__":
                 help="Perform storage migration. Be sure storage is allocated on destination")
 
     parser.add_option("-g","--group",dest="domain_groups",
-                help="Specify groups of VMs, nodes in group are comma separated, groups are ; separated")
+                help="Specify groups of VMs, nodes in group are comma separated, groups are : separated")
 
     parser.add_option("-d","--destination",dest="destination",
                 help="What host to migrate the machines to")
@@ -128,9 +99,9 @@ if __name__ == "__main__":
     if options.config_path != None:
         config_map = loadConfig(options.config_path)
     else:
-        oldLaunch(options)
+        config_map = dict()
 
-
+    loadOptions(options, config_map)
 
     settings = Manager.MigrationSettings(config_map)
 
