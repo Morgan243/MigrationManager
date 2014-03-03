@@ -36,11 +36,11 @@ class MigrationSettings:
             print "not config map provided!!!"
 
     def __str__(self):
-        return ("hosts :: " + str(self.p_host_pairs) + self.print_br + 
-              "vm groups :: " + str(self.vm_groups) + self.print_br + 
-              "grouping :: " + self.grouping + self.print_br + 
-              "storage migration :: " + str(self.move_storage) + self.print_br +
-              "badnwidth :: " + str(self.bandwidth))
+        return ("hosts :: " + str(self.p_host_pairs) + self.print_br +
+                "vm groups :: " + str(self.vm_groups) + self.print_br +
+                "grouping :: " + self.grouping + self.print_br +
+                "storage migration :: " + str(self.move_storage) + self.print_br +
+                "badnwidth :: " + str(self.bandwidth))
 
 
     def loadOptions(self, config_map):
@@ -121,7 +121,7 @@ class libvirt_MigrationManager:
     def __init__(self, settings):
         self.settings = settings
         self.libvirt_handle = VirshHandler.libvirt_Handler( settings.unique_hosts )
-        
+
         self.all_domains = self.libvirt_handle.getVMs()
         self.threads = list()
 
@@ -150,7 +150,7 @@ class libvirt_MigrationManager:
                 self.threads.append( MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[1]],
 									 self.libvirt_handle.host_connections[host_pair[0]],
                                                                         self.settings.move_storage, int(self.settings.bandwidth)))
-        
+
 
     def doMigration(self):
         if self.settings.grouping == "serial":
