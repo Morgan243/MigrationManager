@@ -192,7 +192,11 @@ if __name__ == "__main__":
 
     debug = options.debug
 
-    virt_handler = libvirt_Handler(options.pm_hosts.split(','))
+    hosts = None
+    if options.pm_hosts != None:
+        hosts = options.pm_hosts.split(',')
+
+    virt_handler = libvirt_Handler(hosts)
 
     if options.stop_all:
         virt_handler.stopDomains()
