@@ -142,14 +142,16 @@ class libvirt_MigrationManager:
             print "SRC: " + str(src_vms)
             for vm in src_vms:
                 self.threads.append( MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[0]],
-									 self.libvirt_handle.host_connections[host_pair[1]],
-                                                                        self.settings.move_storage, int(self.settings.bandwidth)))
+                                                                    self.libvirt_handle.host_connections[host_pair[1]],
+                                                                    self.settings.move_storage, int(self.settings.bandwidth),
+                                                                    host_ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])))
 
             print "DEST: " + str(dest_vms)
             for vm in dest_vms:
                 self.threads.append( MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[1]],
-									 self.libvirt_handle.host_connections[host_pair[0]],
-                                                                        self.settings.move_storage, int(self.settings.bandwidth)))
+                                                                    self.libvirt_handle.host_connections[host_pair[0]],
+                                                                    self.settings.move_storage, int(self.settings.bandwidth),
+                                                                     host_ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])))
 
 
     def doMigration(self):

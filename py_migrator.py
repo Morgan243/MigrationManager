@@ -43,7 +43,7 @@ def loadConfig(config_path):
                 print option + " :: " + config_map[(section, option)]
             except:
                 print "Exception loading " + option + " in section " + section
-    return config_map 
+    return config_map
 
 def loadOptions(options, config_map):
     if config_map == None:
@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     parser.add_option("-p","--physical-hosts", dest="pm_hosts", default = None,
                 help="CSV of hosts that are running a hypervisor that are running any of the VMs included in other options. " +
-                "If this option isn't used, then only the host this is run on will be included in checks. The PM used in destination " + 
+                "If this option isn't used, then only the host this is run on will be included in checks. The PM used in destination " +
                 "will automatically be included, but can also be included here if you wish")
 
     parser.add_option("-c","--config-path",dest="config_path",
@@ -106,5 +106,5 @@ if __name__ == "__main__":
     settings = Manager.MigrationSettings(config_map)
 
     print str(settings)
-    #manager = Manager.libvirt_MigrationManager(settings)
-    #manager.doMigration()
+    manager = Manager.libvirt_MigrationManager(settings)
+    manager.doMigration()

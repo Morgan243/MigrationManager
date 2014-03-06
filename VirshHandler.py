@@ -13,6 +13,7 @@ class libvirt_Handler:
     def __init__(self, hosts = None):
         self.hosts = hosts
 
+        self.host_ips = self._getAllHostIPs(self.hosts)
         self.host_connections = self._connectToHosts(self.hosts)
         self.host_domains = self._getAllHostsDomains()
         self.host_defined_domains = self._getAllDefinedDomains()
@@ -36,6 +37,12 @@ class libvirt_Handler:
 
         return host_connections
 
+    def _getAllHostIPs(self, hostnames):
+        host_ips = dict()
+        for host in hostnames:
+            host_ips[host] = socket.gethostbyname(host)
+
+        return host_ips
     # gets running vms
     def _getAllHostsDomains(self, host_connections = None):
         host_domains = dict()
@@ -82,7 +89,7 @@ class libvirt_Handler:
                     if not debug:
                         dom_conn.shutdown()
                     print "Success! (sleeping to avoid lock problem)"
-                    time.sleep(7)
+                    time.sleep(5)
 
     def startDomains(self, hosts = None, vms = None):
         # if nothing provided, start all vms on all nodes
@@ -94,7 +101,7 @@ class libvirt_Handler:
                     if not debug:
                         dom_conn.create()
                     print "Success! (sleeping to avoid lock problem)"
-                    time.sleep(7)
+                    time.sleep(5)
 
 
 
