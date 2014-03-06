@@ -91,6 +91,29 @@ class libvirt_Handler:
                     print "Success! (sleeping to avoid lock problem)"
                     time.sleep(5)
 
+        elif hosts != None and vms == None:
+            print "Stopping all VMs on these hosts: " + str(hosts)
+            for host in hosts:
+                for dom_conn in self.host_domains[host]:
+                    print "Stopping " + str(dom_conn.name()) + " on " + str(host) + "...",
+                    if not debug:
+                        dom_conn.shutdown()
+                    print "Success! (sleeping to avoid lock problem)"
+                    time.sleep(7)
+
+        elif hosts != None and vms != None:
+            print "Stopping all VMs on these hosts: " + str(hosts)
+            for host in hosts:
+                for dom_conn in self.host_domains[host]:
+                    if dom_conn.name() in vms:
+                        print "Stopping " + str(dom_conn.name()) + " on " + str(host) + "...",
+                        if not debug:
+                            dom_conn.shutdown()
+                        print "Success! (sleeping to avoid lock problem)"
+                        time.sleep(7)
+
+
+
     def startDomains(self, hosts = None, vms = None):
         # if nothing provided, start all vms on all nodes
         if hosts == None and vms == None:
@@ -102,6 +125,29 @@ class libvirt_Handler:
                         dom_conn.create()
                     print "Success! (sleeping to avoid lock problem)"
                     time.sleep(5)
+
+        elif hosts != None and vms == None:
+            print "Starting all VMs on these hosts: " + str(hosts)
+            for host in hosts:
+                for dom_conn in self.host_domains[host]:
+                    print "Starting " + str(dom_conn.name()) + " on " + str(host) + "...",
+                    if not debug:
+                        dom_conn.create()
+                    print "Success! (sleeping to avoid lock problem)"
+                    time.sleep(7)
+
+        elif hosts != None and vms != None:
+            print "Starting all VMs on these hosts: " + str(hosts)
+            for host in hosts:
+                for dom_conn in self.host_domains[host]:
+                    if dom_conn.name() in vms:
+                        print "Starting " + str(dom_conn.name()) + " on " + str(host) + "...",
+                        if not debug:
+                            dom_conn.create()
+                        print "Success! (sleeping to avoid lock problem)"
+                        time.sleep(7)
+
+
 
 
 
