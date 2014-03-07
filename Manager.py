@@ -36,10 +36,14 @@ class MigrationSettings:
             print "not config map provided!!!"
 
     def __str__(self):
-        return ("hosts :: " + str(self.p_host_pairs) + self.print_br +
-                "vm groups :: " + str(self.vm_groups) + self.print_br +
-                "grouping :: " + self.grouping + self.print_br +
-                "storage migration :: " + str(self.move_storage) + self.print_br +
+        return ("hosts :: " + str(self.p_host_pairs) + 
+                                    self.print_br +
+                "vm groups :: " + str(self.vm_groups) + 
+                                    self.print_br +
+                "grouping :: " + self.grouping + 
+                                    self.print_br +
+                "storage migration :: " + str(self.move_storage) + 
+                                    self.print_br +
                 "badnwidth :: " + str(self.bandwidth))
 
 
@@ -139,19 +143,29 @@ class libvirt_MigrationManager:
 
             # build migrators for both source and destination
 
-            print "SRC: " + str(src_vms)
+            #print "DEST: " + str([ str(vm.name()) for vm in src_vms ])
+            print "DEST: ",
             for vm in src_vms:
-                self.threads.append( MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[0]],
-                                                                    self.libvirt_handle.host_connections[host_pair[1]],
-                                                                    self.settings.move_storage, int(self.settings.bandwidth),
-                                                                    host_ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])))
+                print vm.name() + ", ",
+                ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
+                mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[0]],
+                                                                self.libvirt_handle.host_connections[host_pair[1]],
+                                                                self.settings.move_storage, int(self.settings.bandwidth),
+                                                                host_ips = ips)
+                self.threads.append( mig_thread )
 
-            print "DEST: " + str(dest_vms)
+            #print "DEST: " + str([ str(vm.name()) for vm in dest_vms ])
+            print "DEST: ",
             for vm in dest_vms:
-                self.threads.append( MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[1]],
-                                                                    self.libvirt_handle.host_connections[host_pair[0]],
-                                                                    self.settings.move_storage, int(self.settings.bandwidth),
-                                                                     host_ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])))
+                print vm.name() + ", ",
+                ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
+                mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[1]],
+                                                                self.libvirt_handle.host_connections[host_pair[0]],
+                                                                self.settings.move_storage, int(self.settings.bandwidth),
+                                                                host_ips = ips)
+                self.threads.append( mig_thread )
+
+            print ""
 
 
     def doMigration(self):
