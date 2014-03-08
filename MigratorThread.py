@@ -6,7 +6,7 @@ import threading
 import time
 
 class libvirt_Migrator(threading.Thread):
-    def __init__(self, domain_conn, source, destination, migrate_storage=False, bandwidth = 32, max_latency = None, host_ips = None):
+    def __init__(self, domain_conn, source, destination, migrate_storage=False, bandwidth = 32, max_latency = None, src_ip = None, dest_ip = None):
         threading.Thread.__init__(self)
 
         self.domain = domain_conn
@@ -15,7 +15,9 @@ class libvirt_Migrator(threading.Thread):
         self.migrate_storage = migrate_storage
         self.bandwidth = bandwidth
         self.max_latency = max_latency
-        self.host_ips = host_ips
+        #self.host_ips = host_ips
+	self.src_ip = src_ip
+	self.dest_ip = dest_ip
 
         self.flags = self.build_migrate_flags()
 
@@ -26,7 +28,7 @@ class libvirt_Migrator(threading.Thread):
         #print "GOING TO IP: " + str(self.host_ips[1])
         #self.domain = self.domain.migrate(self.destination, self.flags, None, None, self.bandwidth)
         #self.domain = self.domain.migrateToURI(self.destination.getURI() , self.flags, None, self.bandwidth)
-        self.domain = self.domain.migrateToURI2(self.destination.getURI(), "tcp://" + self.host_ips[1], None,  self.flags, None, self.bandwidth)
+        self.domain = self.domain.migrateToURI2(self.destination.getURI(), "tcp://" + self.dest_ip, None,  self.flags, None, self.bandwidth)
         t2 = time.time()
         self.latency = t2 - t1
 
