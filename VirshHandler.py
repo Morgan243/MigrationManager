@@ -11,6 +11,7 @@ import socket
 
 class libvirt_Handler:
     def __init__(self, hosts = None):
+        self.cycle_sleep = 5
         self.hosts = hosts
 
         self.host_ips = self._getAllHostIPs(self.hosts)
@@ -89,7 +90,7 @@ class libvirt_Handler:
                     if not debug:
                         dom_conn.shutdown()
                     print "Success! (sleeping to avoid lock problem)"
-                    time.sleep(5)
+                    time.sleep(self.cycle_sleep)
 
         elif hosts != None and vms == None:
             print "Stopping all VMs on these hosts: " + str(hosts)
@@ -99,7 +100,7 @@ class libvirt_Handler:
                     if not debug:
                         dom_conn.shutdown()
                     print "Success! (sleeping to avoid lock problem)"
-                    time.sleep(7)
+                    time.sleep(self.cycle_sleep)
 
         elif hosts != None and vms != None:
             print "Stopping all VMs on these hosts: " + str(hosts)
@@ -110,7 +111,20 @@ class libvirt_Handler:
                         if not debug:
                             dom_conn.shutdown()
                         print "Success! (sleeping to avoid lock problem)"
-                        time.sleep(7)
+                        time.sleep(self.cycle_sleep)
+
+        elif hosts == None and vms != None:
+            print "Stopping these VMs: " + str(vms)
+            print "On these hosts: " + str(self.hosts)
+            for host in self.hosts:
+                for dom_conn in self.host_domains[host]:
+                    if dom_conn.name() in vms:
+                        print "Stopping " + str(dom_conn.name()) + " on " + str(host) + "...",
+                        if not debug:
+                            dom_conn.shutdown()
+                        print "Success! (sleeping to avoid lock problem)"
+                        time.sleep(self.cycle_sleep)
+
 
 
 
@@ -124,7 +138,7 @@ class libvirt_Handler:
                     if not debug:
                         dom_conn.create()
                     print "Success! (sleeping to avoid lock problem)"
-                    time.sleep(5)
+                    time.sleep(self.cycle_sleep)
 
         elif hosts != None and vms == None:
             print "Starting all VMs on these hosts: " + str(hosts)
@@ -134,7 +148,7 @@ class libvirt_Handler:
                     if not debug:
                         dom_conn.create()
                     print "Success! (sleeping to avoid lock problem)"
-                    time.sleep(7)
+                    time.sleep(self.cycle_sleep)
 
         elif hosts != None and vms != None:
             print "Starting all VMs on these hosts: " + str(hosts)
@@ -145,10 +159,19 @@ class libvirt_Handler:
                         if not debug:
                             dom_conn.create()
                         print "Success! (sleeping to avoid lock problem)"
-                        time.sleep(7)
+                        time.sleep(self.cycle_sleep)
 
-
-
+        elif hosts == None and vms != None:
+            print "Starting these VMs: " + str(vms)
+            print "On these hosts: " + str(self.hosts)
+            for host in self.hosts:
+                for dom_conn in self.host_domains[host]:
+                    if dom_conn.name() in vms:
+                        print "Starting " + str(dom_conn.name()) + " on " + str(host) + "...",
+                        if not debug:
+                            dom_conn.create()
+                        print "Success! (sleeping to avoid lock problem)"
+                        time.sleep(self.cycle_sleep)
 
 
 # Interfaces with Virsh to parse available VMs and apply settings to domains
@@ -241,17 +264,25 @@ if __name__ == "__main__":
                 "If this option isn't used, then only the host this is run on will be included in checks. The PM used in destination " +
                 "will automatically be included, but can also be included here if you wish")
 
+    parser.add_option("-v", "--virtual-machines", dest="vms", default = None,
+                help="CSV of virtual machines that are running on the PMs that will be connected. Use to specify a set of particular VMs " +
+                "to operate on, rather than all of the running or stopped (the default case without this option).")
+
     (options, args) = parser.parse_args()
 
     debug = options.debug
 
     hosts = None
+    vms = None
     if options.pm_hosts != None:
         hosts = options.pm_hosts.split(',')
+
+    if options.vms != None:
+        vms = options.vms.split(',')
 
     virt_handler = libvirt_Handler(hosts)
 
     if options.stop_all:
-        virt_handler.stopDomains()
+        virt_handler.stopDomains(vms = vms)
     elif options.start_all:
-        virt_handler.startDomains()
+        virt_handler.startDomains(vms = vms)
