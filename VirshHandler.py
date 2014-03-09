@@ -90,6 +90,7 @@ class libvirt_Handler:
                     if not debug:
                         dom_conn.shutdown()
                     print "Success! (sleeping to avoid lock problem)"
+                    sys.stdout.flush()
                     time.sleep(self.cycle_sleep)
 
         elif hosts != None and vms == None:
@@ -100,6 +101,7 @@ class libvirt_Handler:
                     if not debug:
                         dom_conn.shutdown()
                     print "Success! (sleeping to avoid lock problem)"
+                    sys.stdout.flush()
                     time.sleep(self.cycle_sleep)
 
         elif hosts != None and vms != None:
@@ -111,6 +113,7 @@ class libvirt_Handler:
                         if not debug:
                             dom_conn.shutdown()
                         print "Success! (sleeping to avoid lock problem)"
+                        sys.stdout.flush()
                         time.sleep(self.cycle_sleep)
 
         elif hosts == None and vms != None:
@@ -123,6 +126,7 @@ class libvirt_Handler:
                         if not debug:
                             dom_conn.shutdown()
                         print "Success! (sleeping to avoid lock problem)"
+                        sys.stdout.flush()
                         time.sleep(self.cycle_sleep)
 
 
@@ -138,6 +142,7 @@ class libvirt_Handler:
                     if not debug:
                         dom_conn.create()
                     print "Success! (sleeping to avoid lock problem)"
+                    sys.stdout.flush()
                     time.sleep(self.cycle_sleep)
 
         elif hosts != None and vms == None:
@@ -148,6 +153,7 @@ class libvirt_Handler:
                     if not debug:
                         dom_conn.create()
                     print "Success! (sleeping to avoid lock problem)"
+                    sys.stdout.flush()
                     time.sleep(self.cycle_sleep)
 
         elif hosts != None and vms != None:
@@ -159,6 +165,7 @@ class libvirt_Handler:
                         if not debug:
                             dom_conn.create()
                         print "Success! (sleeping to avoid lock problem)"
+                        sys.stdout.flush()
                         time.sleep(self.cycle_sleep)
 
         elif hosts == None and vms != None:
@@ -171,6 +178,7 @@ class libvirt_Handler:
                         if not debug:
                             dom_conn.create()
                         print "Success! (sleeping to avoid lock problem)"
+                        sys.stdout.flush()
                         time.sleep(self.cycle_sleep)
 
 
