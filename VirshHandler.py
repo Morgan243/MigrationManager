@@ -41,7 +41,11 @@ class libvirt_Handler:
     def _getAllHostIPs(self, hostnames):
         host_ips = dict()
         for host in hostnames:
-            host_ips[host] = socket.gethostbyname(host)
+            try:
+                host_ips[host] = socket.gethostbyname(host)
+            except:
+                print "EXCEPTION getting " + str(host) + "\'s ip address!!"
+                sys.exit(1)
 
         return host_ips
     # gets running vms
