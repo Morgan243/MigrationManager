@@ -177,9 +177,8 @@ class libvirt_MigrationManager:
                     mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[0]],
                                                                     self.libvirt_handle.host_connections[host_pair[1]],
                                                                     self.settings.move_storage, int(self.settings.bandwidth),
-                                                                    host_ips = ips)
+                                                                    src_ip = ips[0], dest_ip = ips[1])
                     self.threads.append( mig_thread )
-
 
             #print "DEST: " + str([ str(vm.name()) for vm in dest_vms ])
             print "DEST: ",
@@ -190,8 +189,8 @@ class libvirt_MigrationManager:
                     mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[1]],
                                                                     self.libvirt_handle.host_connections[host_pair[0]],
                                                                     self.settings.move_storage, int(self.settings.bandwidth),
-                                                                    host_ips = ips)
-                    self.threads.append( mig_thread )
+                                                                    src_ip = ips[1], dest_ip = ips[0])
+                self.threads.append( mig_thread )
 
             print ""
 
