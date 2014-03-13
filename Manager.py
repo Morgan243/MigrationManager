@@ -171,7 +171,7 @@ class libvirt_MigrationManager:
             # go through all VMs on source PM
             for vm in src_vms:
                 # no VMs explicitly specified, so move them all
-                if self.vm_groups == None:
+                if self.settings.vm_groups == None:
                     print vm.name() + ", ",
                     ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
                     mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[0]],
@@ -183,7 +183,7 @@ class libvirt_MigrationManager:
             #print "DEST: " + str([ str(vm.name()) for vm in dest_vms ])
             print "DEST: ",
             for vm in dest_vms:
-                if self.vm_groups == None:
+                if self.settings.vm_groups == None:
                     print vm.name() + ", ",
                     ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
                     mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[1]],
