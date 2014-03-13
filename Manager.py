@@ -216,8 +216,11 @@ class libvirt_MigrationManager:
         for i in self.threads:
             i.start()
             i.join()
-            print '%0.3f, ' % (i.latency),
-            self.result_latency_csv += '%0.3f, ' % (i.latency)
+            lat = i.getLatency()
+            #print '%0.3f, ' % (i.latency),
+            print lat + ','
+            #self.result_latency_csv += '%0.3f, ' % (i.latency)
+            self.result_latency_csv += lat + ','
             sys.stdout.flush()
         print ""
 
@@ -232,8 +235,11 @@ class libvirt_MigrationManager:
 
         for i in self.threads:
             i.join()
-            print '%0.3f, ' % (i.latency),
-            self.result_latency_csv += '%0.3f, ' % (i.latency)
+            lat = i.getLatency()
+            #print '%0.3f, ' % (i.latency),
+            print lat + ','
+            #self.result_latency_csv += '%0.3f, ' % (i.latency)
+            self.result_latency_csv += lat + ','
             sys.stdout.flush()
 
         print ""

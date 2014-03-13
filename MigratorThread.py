@@ -9,6 +9,9 @@ class libvirt_Migrator(threading.Thread):
     def __init__(self, domain_conn, source, destination, migrate_storage=False, bandwidth = 32, max_latency = None, src_ip = None, dest_ip = None):
         threading.Thread.__init__(self)
 
+        # mark this true if an exception was thrown during migration
+        self.except_thrown = False
+
         self.domain = domain_conn
         self.source = source
         self.destination = destination
@@ -28,7 +31,14 @@ class libvirt_Migrator(threading.Thread):
         #print "GOING TO IP: " + str(self.host_ips[1])
         #self.domain = self.domain.migrate(self.destination, self.flags, None, None, self.bandwidth)
         #self.domain = self.domain.migrateToURI(self.destination.getURI() , self.flags, None, self.bandwidth)
-        self.domain = self.domain.migrateToURI2(self.destination.getURI(), "tcp://" + self.dest_ip, None,  self.flags, None, self.bandwidth)
+
+        try:
+            self.domain = self.domain.migrateToURI2(self.destination.getURI(), "tcp://" + self.dest_ip, None,  self.flags, None, self.bandwidth)
+        except:
+            print "Exception thrown (" + self.domain.name() + ")"
+            print "ERROR: " + str(sys.exc_info()[0])
+            self.except_thrown = True
+
         t2 = time.time()
         self.latency = t2 - t1
 
@@ -40,6 +50,13 @@ class libvirt_Migrator(threading.Thread):
 
 	return flags
 
+    def getLatency(self):
+        lat = '0.3f' % (self.latency)
+
+        if self.except_thrown:
+            lat += '!'
+
+        return lat
 
 
 
