@@ -9,6 +9,7 @@ import Manager
 import VirshHandler
 import MigratorThread
 import ConfigParser
+from pprint import pprint
 from optparse import OptionParser
 
 
@@ -59,7 +60,7 @@ def loadOptions(options, config_map):
     if options.migration_method != None:
         config_map[ ("options", "grouping") ] = options.migration_method
 
-    print str(config_map)
+    pprint(config_map)
 
 
 if __name__ == "__main__":

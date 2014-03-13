@@ -47,7 +47,7 @@ class MigrationSettings:
                                     self.print_br +
                 "storage migration :: " + str(self.move_storage) + 
                                     self.print_br +
-                "badnwidth :: " + str(self.bandwidth))
+                "bandwidth :: " + str(self.bandwidth))
 
 
     def loadOptions(self, config_map):
@@ -166,7 +166,6 @@ class libvirt_MigrationManager:
 
             # build migrators for both source and destination
 
-            #print "DEST: " + str([ str(vm.name()) for vm in src_vms ])
             print "SRC: ",
             # go through all VMs on source PM
             for vm in src_vms:
@@ -180,8 +179,7 @@ class libvirt_MigrationManager:
                                                                     src_ip = ips[0], dest_ip = ips[1])
                     self.threads.append( mig_thread )
 
-            #print "DEST: " + str([ str(vm.name()) for vm in dest_vms ])
-            print "DEST: ",
+            print "\nDEST: ",
             for vm in dest_vms:
                 if self.vm_groups == None:
                     print vm.name() + ", ",
