@@ -11,6 +11,9 @@ from collections import namedtuple
 OptionDesc = namedtuple('OptionDesc', 'config_tuple store_in parse')
 
 class MigrationSettings:
+    """
+    Container for settings that multiple objects may need accessed to
+    """
     def __init__(self, config_map = None):
         self.print_br = "\n"
         self.config_map = config_map
@@ -48,6 +51,9 @@ class MigrationSettings:
 
 
     def loadOptions(self, config_map):
+        """
+        Parses through the config_map dictionary and parses them into the appriopriate variables and structures
+        """
         print "Loading options"
         for option, value in config_map.items():
 
@@ -86,6 +92,11 @@ class MigrationSettings:
 
 
     def parseGroups(self, vm_groups):
+        """
+        Interpret the VM groups string (provided as "vms" option in cofig)
+        Groups are seperated by ':' and members of the group are seperated by ','
+        RETURNS-> A list of group lists
+        """
         # separate out the groups
         tmp_groups = vm_groups.split(':')
 
@@ -105,12 +116,20 @@ class MigrationSettings:
 
 
     def checkTorF(self, string):
+        """
+        Simply check if string is "true" or not
+        RETURNS-> bool
+        """
         if string.lower() == "true":
             return True
         else:
             return False
 
     def parseHosts(self, hosts):
+        """
+        Interpret hosts string (provided as "hosts" optin in config)
+        Can specify pairs of PMs using ':' and members of pairs with ','
+        """
         groups = hosts.split(':')
         self.p_host_pairs = list()
 
@@ -122,6 +141,10 @@ class MigrationSettings:
             self.unique_hosts.append(group_hosts[1].strip())
 
 class libvirt_MigrationManager:
+    """
+    Aggregates connections made by Virsh Handler and builds MigratorThreads using them. 
+    Interfaces allow the launching of different migration strategies
+    """
     def __init__(self, settings):
         self.settings = settings
         self.libvirt_handle = VirshHandler.libvirt_Handler( settings.unique_hosts )
@@ -144,26 +167,31 @@ class libvirt_MigrationManager:
             # build migrators for both source and destination
 
             #print "DEST: " + str([ str(vm.name()) for vm in src_vms ])
-            print "DEST: ",
+            print "SRC: ",
+            # go through all VMs on source PM
             for vm in src_vms:
-                print vm.name() + ", ",
-                ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
-                mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[0]],
-                                                                self.libvirt_handle.host_connections[host_pair[1]],
-                                                                self.settings.move_storage, int(self.settings.bandwidth),
-                                                                host_ips = ips)
-                self.threads.append( mig_thread )
+                # no VMs explicitly specified, so move them all
+                if self.vm_groups == None:
+                    print vm.name() + ", ",
+                    ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
+                    mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[0]],
+                                                                    self.libvirt_handle.host_connections[host_pair[1]],
+                                                                    self.settings.move_storage, int(self.settings.bandwidth),
+                                                                    host_ips = ips)
+                    self.threads.append( mig_thread )
+
 
             #print "DEST: " + str([ str(vm.name()) for vm in dest_vms ])
             print "DEST: ",
             for vm in dest_vms:
-                print vm.name() + ", ",
-                ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
-                mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[1]],
-                                                                self.libvirt_handle.host_connections[host_pair[0]],
-                                                                self.settings.move_storage, int(self.settings.bandwidth),
-                                                                host_ips = ips)
-                self.threads.append( mig_thread )
+                if self.vm_groups == None:
+                    print vm.name() + ", ",
+                    ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
+                    mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[1]],
+                                                                    self.libvirt_handle.host_connections[host_pair[0]],
+                                                                    self.settings.move_storage, int(self.settings.bandwidth),
+                                                                    host_ips = ips)
+                    self.threads.append( mig_thread )
 
             print ""
 
