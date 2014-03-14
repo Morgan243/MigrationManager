@@ -278,7 +278,7 @@ class libvirt_MigrationManager:
             i.join()
             lat = i.getLatency()
             #print '%0.3f, ' % (i.latency),
-            print lat + ','
+            print lat + ',',
             #self.result_latency_csv += '%0.3f, ' % (i.latency)
             self.result_latency_csv += lat + ','
             sys.stdout.flush()
@@ -299,7 +299,7 @@ class libvirt_MigrationManager:
             i.join()
             lat = i.getLatency()
             #print '%0.3f, ' % (i.latency),
-            print lat + ','
+            print lat + ',',
             #self.result_latency_csv += '%0.3f, ' % (i.latency)
             self.result_latency_csv += lat + ','
             sys.stdout.flush()
