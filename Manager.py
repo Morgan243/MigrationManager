@@ -267,13 +267,13 @@ class libvirt_MigrationManager:
             migrators = self.threads
 
         #migrate one at a time
-        for i in self.migrators:
+        for i in migrators:
             print i.domain.name() + ",",
             self.header_csv += i.domain.name() + ","
         print ""
         sys.stdout.flush()
 
-        for i in self.migrators:
+        for i in migrators:
             i.start()
             i.join()
             lat = i.getLatency()
@@ -288,14 +288,14 @@ class libvirt_MigrationManager:
         if migrators == None:
             migrators = self.threads
         #start migrations
-        for i in self.migrators:
+        for i in migrators:
             i.start()
             print i.domain.name() + ",",
             self.header_csv += i.domain.name() + ","
         print ""
         sys.stdout.flush()
 
-        for i in self.migrators:
+        for i in migrators:
             i.join()
             lat = i.getLatency()
             #print '%0.3f, ' % (i.latency),
