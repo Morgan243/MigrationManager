@@ -151,6 +151,7 @@ class libvirt_MigrationManager:
 
         self.all_domains = self.libvirt_handle.getVMs()
         self.threads = list()
+        self.thread_groups = list()
 
         self.buildMigrators()
 
@@ -159,45 +160,101 @@ class libvirt_MigrationManager:
 
     # make a thread for each thread that needs migrating
     def buildMigrators(self):
-        # go through hsot pairs
+
+        if self.vm_groups == None:
+            self.buildWithAllVMs()
+            self.thread_groups = None
+        else:
+            # go through list of list of VMs
+            for vm_group in self.settings.vm_groups:
+                #return list of threads for this vm group
+                self.thread_groups.append(self.buildVMGroup(vm_group))
+                self.threads = None
+
+        # build migrators for both source and destination
+        print ""
+
+    def buildVMGroup(self, vm_list):
+        mig_threads = list()
         for host_pair in self.settings.p_host_pairs:
+            
+            # get all the vms on src/dest pai of PMs
             src_vms = self.libvirt_handle.getVMs(host_pair[0])
             dest_vms = self.libvirt_handle.getVMs(host_pair[1])
 
-            # build migrators for both source and destination
-
-            print "SRC: ",
-            # go through all VMs on source PM
             for vm in src_vms:
-                # no VMs explicitly specified, so move them all
-                if self.vm_groups == None:
+                # is this vm supposed to be migrated?
+                if vm.name() in vm_list:
+                    
                     print vm.name() + ", ",
+                    # needs to go from source to dest
                     ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
                     mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[0]],
                                                                     self.libvirt_handle.host_connections[host_pair[1]],
                                                                     self.settings.move_storage, int(self.settings.bandwidth),
                                                                     src_ip = ips[0], dest_ip = ips[1])
-                    self.threads.append( mig_thread )
+                    mig_threads.append(mig_thread)
 
-            print "\nDEST: ",
             for vm in dest_vms:
-                if self.vm_groups == None:
+                if vm.name() in vm_list:
                     print vm.name() + ", ",
+                    #will go from dest to source
                     ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
                     mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[1]],
                                                                     self.libvirt_handle.host_connections[host_pair[0]],
                                                                     self.settings.move_storage, int(self.settings.bandwidth),
                                                                     src_ip = ips[1], dest_ip = ips[0])
+                    mig_threads.append(mig_thread)
+
+        return mig_threads
+                        
+            
+
+
+    def buildWithAllVMs(self):
+        # go through hsot pairs
+        for host_pair in self.settings.p_host_pairs:
+            src_vms = self.libvirt_handle.getVMs(host_pair[0])
+            dest_vms = self.libvirt_handle.getVMs(host_pair[1])
+
+            print "SRC: ",
+            # go through all VMs on source PM
+            for vm in src_vms:
+                # no VMs explicitly specified, so move them all
+                print vm.name() + ", ",
+                ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
+                mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[0]],
+                                                                self.libvirt_handle.host_connections[host_pair[1]],
+                                                                self.settings.move_storage, int(self.settings.bandwidth),
+                                                                src_ip = ips[0], dest_ip = ips[1])
                 self.threads.append( mig_thread )
 
-            print ""
+            print "\nDEST: ",
+            for vm in dest_vms:
+                print vm.name() + ", ",
+                ips = (self.libvirt_handle.host_ips[host_pair[0]], self.libvirt_handle.host_ips[host_pair[1]])
+                mig_thread = MigratorThread.libvirt_Migrator(vm, self.libvirt_handle.host_connections[host_pair[1]],
+                                                                self.libvirt_handle.host_connections[host_pair[0]],
+                                                                self.settings.move_storage, int(self.settings.bandwidth),
+                                                                src_ip = ips[1], dest_ip = ips[0])
+                self.threads.append( mig_thread )
 
 
     def doMigration(self):
         if self.settings.grouping == "serial":
-            self.serialMigration()
+            if self.threads != None:
+                self.serialMigration()
+
+            elif self.thread_groups != None:
+                for th_group in self.thread_groups:
+                    self.serialMigration(th_group)
+
         elif self.settings.grouping == "parallel":
-            self.parallel_migration()
+            if self.threads != None:
+                self.parallel_migration()
+            elif self.thread_groups != None:
+                for th_group in self.thread_groups:
+                    self.parallel_migration(th_group)
 
         if self.settings.bench_result_file != None:
             with open(self.settings.bench_result_file, 'a') as f:
@@ -205,15 +262,18 @@ class libvirt_MigrationManager:
                 f.write(self.result_latency_csv + "\n")
 
 
-    def serialMigration(self):
+    def serialMigration(self, migrators = None):
+        if migrators == None:
+            migrators = self.threads
+
         #migrate one at a time
-        for i in self.threads:
+        for i in self.migrators:
             print i.domain.name() + ",",
             self.header_csv += i.domain.name() + ","
         print ""
         sys.stdout.flush()
 
-        for i in self.threads:
+        for i in self.migrators:
             i.start()
             i.join()
             lat = i.getLatency()
@@ -224,16 +284,18 @@ class libvirt_MigrationManager:
             sys.stdout.flush()
         print ""
 
-    def parallel_migration(self):
+    def parallel_migration(self, migrators = None):
+        if migrators == None:
+            migrators = self.threads
         #start migrations
-        for i in self.threads:
+        for i in self.migrators:
             i.start()
             print i.domain.name() + ",",
             self.header_csv += i.domain.name() + ","
         print ""
         sys.stdout.flush()
 
-        for i in self.threads:
+        for i in self.migrators:
             i.join()
             lat = i.getLatency()
             #print '%0.3f, ' % (i.latency),
