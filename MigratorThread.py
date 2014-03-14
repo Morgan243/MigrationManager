@@ -35,8 +35,11 @@ class libvirt_Migrator(threading.Thread):
         try:
             self.domain = self.domain.migrateToURI2(self.destination.getURI(), "tcp://" + self.dest_ip, None,  self.flags, None, self.bandwidth)
         except:
+		
             print "Exception thrown (" + self.domain.name() + ")"
             print "ERROR: " + str(sys.exc_info()[0])
+	    print "URI: " + str(self.destination.getURI())
+	    print "DEST IP: " + str(self.dest_ip)
             self.except_thrown = True
 
         t2 = time.time()
@@ -51,7 +54,12 @@ class libvirt_Migrator(threading.Thread):
 	return flags
 
     def getLatency(self):
-        lat = '0.3f' % (self.latency)
+	try:
+		lat = '0.3f' % (self.latency)
+	except:
+		#print "PROBLEM: " + str(self.latency)
+		lat = str(self.latency)
+
 
         if self.except_thrown:
             lat += '!'
