@@ -161,7 +161,7 @@ class libvirt_MigrationManager:
     # make a thread for each thread that needs migrating
     def buildMigrators(self):
 
-        if self.vm_groups == None:
+        if self.settings.vm_groups == None:
             self.buildWithAllVMs()
             self.thread_groups = None
         else:
