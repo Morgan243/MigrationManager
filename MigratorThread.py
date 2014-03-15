@@ -31,8 +31,8 @@ class libvirt_Migrator(threading.Thread):
         #print "GOING TO IP: " + str(self.host_ips[1])
         #self.domain = self.domain.migrate(self.destination, self.flags, None, None, self.bandwidth)
         #self.domain = self.domain.migrateToURI(self.destination.getURI() , self.flags, None, self.bandwidth)
-        print "URI: " + str(self.destination.getURI())
-        print "DEST IP: " + str(self.dest_ip)
+        #print "URI: " + str(self.destination.getURI())
+        #print "DEST IP: " + str(self.dest_ip)
 
         try:
             self.domain = self.domain.migrateToURI2(self.destination.getURI(), "tcp://" + self.dest_ip, None,  self.flags, None, self.bandwidth)
