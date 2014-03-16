@@ -43,7 +43,7 @@ class libvirt_Migrator(threading.Thread):
                 raise 
         except:
 		
-            print "Exception thrown (" + self.domain.name() + ")"
+            print "Exception thrown (" + self.dom_name + ")"
             print "ERROR: " + str(sys.exc_info()[0])
             self.except_thrown = True
 
