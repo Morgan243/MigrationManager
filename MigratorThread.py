@@ -13,6 +13,7 @@ class libvirt_Migrator(threading.Thread):
         self.except_thrown = False
 
         self.domain = domain_conn
+        self.dom_name = self.domain.name()
         self.source = source
         self.destination = destination
         self.migrate_storage = migrate_storage
@@ -31,14 +32,18 @@ class libvirt_Migrator(threading.Thread):
         #print "GOING TO IP: " + str(self.host_ips[1])
         #self.domain = self.domain.migrate(self.destination, self.flags, None, None, self.bandwidth)
         #self.domain = self.domain.migrateToURI(self.destination.getURI() , self.flags, None, self.bandwidth)
-        print "URI: " + str(self.destination.getURI())
-        print "DEST IP: " + str(self.dest_ip)
+        #print "URI: " + str(self.destination.getURI())
+        #print "DEST IP: " + str(self.dest_ip)
 
         try:
-            self.domain = self.domain.migrateToURI2(self.destination.getURI(), "tcp://" + self.dest_ip, None,  self.flags, None, self.bandwidth)
+            self.return_code = self.domain.migrateToURI2(self.destination.getURI(), "tcp://" + self.dest_ip, None,  self.flags, None, self.bandwidth)
+        
+            if self.return_code != 0:
+                print "MIGRATION RETURNED NON-ZERO: " + self.return_code
+                raise 
         except:
 		
-            print "Exception thrown (" + self.domain.name() + ")"
+            print "Exception thrown (" + self.dom_name + ")"
             print "ERROR: " + str(sys.exc_info()[0])
             self.except_thrown = True
 

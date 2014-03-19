@@ -268,8 +268,8 @@ class libvirt_MigrationManager:
 
         #migrate one at a time
         for i in migrators:
-            print i.domain.name() + ",",
-            self.header_csv += i.domain.name() + ","
+            #print i.domain.name() + ",",
+            self.header_csv += i.dom_name + ","
         print ""
         sys.stdout.flush()
 
@@ -277,8 +277,9 @@ class libvirt_MigrationManager:
             i.start()
             i.join()
             lat = i.getLatency()
-            #print '%0.3f, ' % (i.latency),
-            print lat + ',',
+            print i.dom_name + ":",
+            print '%0.3f, ' % (i.latency),
+            #print lat + ',',
             #self.result_latency_csv += '%0.3f, ' % (i.latency)
             self.result_latency_csv += lat + ','
             sys.stdout.flush()
@@ -290,8 +291,8 @@ class libvirt_MigrationManager:
         #start migrations
         for i in migrators:
             i.start()
-            print i.domain.name() + ",",
-            self.header_csv += i.domain.name() + ","
+            print i.dom_name + ",",
+            self.header_csv += i.dom_name + ","
         print ""
         sys.stdout.flush()
 
