@@ -41,9 +41,10 @@ def loadConfig(config_path):
         for option in config.options(section):
             try:
                 config_map[(section, option)] = config.get(section, option)
-                print option + " :: " + config_map[(section, option)]
+                #print option + " :: " + config_map[(section, option)]
             except:
                 print "Exception loading " + option + " in section " + section
+                sys.exit(1)
     return config_map
 
 def loadOptions(options, config_map):
@@ -81,18 +82,23 @@ if __name__ == "__main__":
                 help="Perform storage migration. Be sure storage is allocated on destination")
 
     parser.add_option("-g","--group",dest="domain_groups",
-                help="Specify groups of VMs, nodes in group are comma separated, groups are : separated")
+                help="Specify groups of VMs, nodes in group are comma separated, " +
+                        "groups are : separated")
 
     parser.add_option("-d","--destination",dest="destination",
                 help="What host to migrate the machines to")
 
     parser.add_option("-p","--physical-hosts", dest="pm_hosts", default = None,
-                help="CSV of hosts that are running a hypervisor that are running any of the VMs included in other options. " +
-                "If this option isn't used, then only the host this is run on will be included in checks. The PM used in destination " +
-                "will automatically be included, but can also be included here if you wish")
+                help="CSV of hosts that are running a hypervisor that are running " +
+                        "any of the VMs included in other options. " +
+                        "If this option isn't used, then only the host " + 
+                        "this is run on will be included in checks. The " +
+                        "PM used in destination will automatically be included, " + 
+                        "but can also be included here if you wish")
 
     parser.add_option("-c","--config-path",dest="config_path",
-                help="Path to an ini-like config file, options set here will be overwritten with synonomous CLI options")
+                help="Path to an ini-like config file, options set " + 
+                    "here will be overwritten with synonomous CLI options")
 
     (options, args) = parser.parse_args()
 
